@@ -104,6 +104,10 @@ def insert_tweet(connection,tweet):
     # insert tweet within a transaction;
     # this ensures that a tweet does not get "partially" loaded
     with connection.begin() as trans:
+    # for certain versions of sqlalchemy this will work as written
+    # SELECT above is inside an "implicit transaction", (auto adding begin/end cmds)
+    # but for older/original version of sqlalchemy it automatically ends the tx, but for newer versions the tx is not ended automatically, so creates an
+    # error when we try to create a new tx inside this implicit tx (above on line 106, with connection.begin as trans) 
 
         ########################################
         # insert into the users table
@@ -115,7 +119,17 @@ def insert_tweet(connection,tweet):
 
         # create/update the user
         sql = sqlalchemy.sql.text('''
+        INSERT INTO users
+            (id users, created_at, ...)
+            VALUES
+            (:id_users, :created_at, ...)
             ''')
+            # don't insert data at the python string level, instead use the .text function to create query parameters
+
+        # res = connection.execute(sql, {
+        # 'id_users': tweet['user']['id'],
+        # 'created_at': tweet['created_at'],
+        # ... })
 
         ########################################
         # insert into the tweets table
